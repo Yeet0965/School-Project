@@ -1,6 +1,6 @@
 import pygame
 import sys
-import spritesheet
+
 #import sprite
 pygame.init()
 #import the pygame module
@@ -108,14 +108,17 @@ class Player():
      if self.rect.left + delta_x < 0:
          delta_x = -self.rect.left
   
-  
-     if self.rect.left + delta_x > 1620:
+     if self.rect.right + delta_x > 1620:
          delta_x = 1620 - self.rect.right
      #checking for if player goes off screen in below
      if self.rect.bottom + delta_y >= 780:
         delta_y = 780 - self.rect.bottom
         self.velocity_y = 0
         self.jumped = False
+     #Checking for if the player off screen in above.
+     if self.rect.top + delta_y <= 0:
+        delta_y = 0
+       
 
      
 
