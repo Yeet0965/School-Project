@@ -29,16 +29,15 @@ level2_img = pygame.transform.scale(level2_img, (86, 96))
 level3_img = pygame.image.load("level3.png").convert_alpha()
 level3_img = pygame.transform.scale(level3_img, (86, 96))
 
+
 #Game Variable
 menu_state = "home"
 gravity = 1
 tile_size = 60
+game_over = 0
 #max_scroll = 200
 
 #Variables for sprites
-#sprite_sheet_image = pygame.image.load("Run.png").convert_alpha()
-#sprite_sheet_image = pygame.transform.scale(sprite_sheet_image, (1024, 260))
-#sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
 cat = pygame.image.load("Idle.png").convert_alpha()
 cat = pygame.transform.scale(cat, (150, 150))
 endpoint = pygame.image.load("endpoint.png").convert_alpha()
@@ -85,7 +84,7 @@ class Player():
     #get key inputs
      key = pygame.key.get_pressed()
      if key [pygame.K_SPACE] and self.jumped == False:
-        self.velocity_y = -15
+        self.velocity_y = -20
         self.jumped = True
         self.space_pressed = True
      if not key[pygame.K_SPACE]:
@@ -111,28 +110,40 @@ class Player():
      delta_y += self.velocity_y
 
 #check for collision
-     for tile in level1.tile_list:
+     for tile in level.tile_list:
+        #checing for collision in x axis
+        if tile[1].colliderect(self.rect.x + delta_x, self.rect.y, self.width, self.height):
+            delta_x = 0
         #checking for collision in y axis
         if tile[1].colliderect(self.rect.x, self.rect.y + delta_y, self.width, self.height):
            #Checking if below is ground for jumping amd hitting head
            if self.velocity_y < 0:
               delta_y = tile[1].bottom - self.rect.top
+              self.velocity_y = 0
               #Checking if above is ground for falling and hitting feet
-           if self.velocity_y >= 0:
+           elif self.velocity_y >= 0:
               delta_y = tile[1].top - self.rect.bottom
+              self.velocity_y = 0
+        #checking for collision with hazards
+        if pygame.sprite.spritecollide(self, hazards, False):
+           self.rect.x = 60
+           self.rect.y = 720
 
     #checking for if player goes off screen or not
      if self.rect.left + delta_x < 0:
          delta_x = -self.rect.left
   
   
-     if self.rect.left + delta_x > 1620:
+     if self.rect.right + delta_x > 1620:
          delta_x = 1620 - self.rect.right
      #checking for if player goes off screen in below
      if self.rect.bottom + delta_y >= 780:
         delta_y = 780 - self.rect.bottom
         self.velocity_y = 0
         self.jumped = False
+    #checking for if player goes off screen in above
+     if self.rect.top + delta_y <= 0:
+        delta_y = 0
 
      
 
@@ -219,27 +230,47 @@ class Load_World():
                  #saving 2 values into tile tuple
                  tile = (image, image_rect)
                  self.tile_list.append(tile)
+
+
+
+
+
+             if tile == 2:
+                hazard = Hazard(collumn_count * tile_size, row_count * tile_size)
+                hazards.add(hazard)
+            
+
              collumn_count += 1
          row_count += 1   
+
 
    def draw(self):
      for tile in self.tile_list:
          screen.blit(tile[0], tile[1])
-         
+
+hazards = pygame.sprite.Group()
+class Hazard(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+     pygame.sprite.Sprite.__init__(self)
+     image = pygame.image.load("hazard.png")
+     self.image = pygame.transform.scale(image, (tile_size, tile_size))
+     self.rect = self.image.get_rect()
+     self.rect.x = x
+     self.rect.y = y         
 
 level1_data =[
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0 , 0],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -250,12 +281,12 @@ level2_data =[
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -275,9 +306,10 @@ level3_data =[
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
-level1 = Load_World(level1_data)
-level2 = Load_World(level2_data)
-level3 = Load_World(level3_data)
+
+
+
+
 
 
 running = True
@@ -306,28 +338,34 @@ while running:
     #Allows the user to choose levels
     if menu_state == "choose_levels":
         if level1_button.draw():
+            level = Load_World(level1_data)
             menu_state = "level_1"
         if level2_button.draw():
+            level = Load_World(level2_data)
             menu_state = "level_2"
         if level3_button.draw():
+            level = Load_World(level3_data)
             menu_state = "level_3"
     if menu_state == "level_1":    
         character.draw()
         character.movement()
-        level1.draw()
+        level.draw()
+        hazards.draw(screen)
         grid()
         
 
     if menu_state == "level_2":  
         character.draw()
         character.movement()
-        level2.draw()
+        level.draw()
+        hazards.draw(screen)
         grid()
 
     if menu_state == "level_3":  
         character.draw()
         character.movement()
-        level3.draw()
+        level.draw()
+        hazards.draw(screen)
         grid()
 
 
