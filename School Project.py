@@ -1,16 +1,15 @@
 import pygame
-import sys
-import spritesheet
-from pygame.locals import *
-#import sprite
-pygame.init()
 #import the pygame module
+import sys
+pygame.init()
 
+
+#Create a window with an interface
 screen = pygame.display.set_mode((1620, 780))
 pygame.display.set_caption("My Game")
 background = pygame.image.load("background.png").convert()
 background = pygame.transform.scale(background, (1620, 780))
-#Create a window with an interface
+
 
 #frame rate
 clock = pygame.time.Clock()
@@ -29,13 +28,22 @@ level2_img = pygame.transform.scale(level2_img, (86, 96))
 level3_img = pygame.image.load("level3.png").convert_alpha()
 level3_img = pygame.transform.scale(level3_img, (86, 96))
 
+next_level = pygame.image.load("next.png").convert_alpha()
+next_level = pygame.transform.scale(next_level, (60, 60))
+
+back_level = pygame.image.load("back.png").convert_alpha()
+back_level = pygame.transform.scale(back_level, (60, 60))
+
+home = pygame.image.load("home.png").convert_alpha()
+home = pygame.transform.scale(home, (60, 60))
+ 
 
 #Game Variable
 menu_state = "home"
 gravity = 1
 tile_size = 60
 game_over = 0
-#max_scroll = 200
+
 
 #Variables for sprites
 cat = pygame.image.load("Idle.png").convert_alpha()
@@ -43,24 +51,7 @@ cat = pygame.transform.scale(cat, (150, 150))
 endpoint = pygame.image.load("endpoint.png").convert_alpha()
 platform2 = pygame.image.load("platform2.png").convert_alpha()
 
-#Create animation list
-#animation_list = []
-#animation_steps = 4
-#last_update = pygame.time.get_ticks()
-#animation = 300
-#frame = 0
-
-#black = (0, 0, 0)
-
-#for x in range (animation_steps):
-    #animation_list.append(sprite_sheet.get_image(sprite_sheet_image, 256, 256, black, 0))
-
-#frame_0 = sprite_sheet.get_image(sprite_sheet_image, 256, 256, black, x)
-
-
-#colours
 white = (255, 255, 255)
-
 
 #Player class
 class Player():
@@ -71,7 +62,7 @@ class Player():
       self.rect = pygame.Rect(0, 0, self.width, self.height)
       self.rect.center = (x, y)
       self.flip = False
-
+      self.on_ground = False
       self.velocity_y = 0
       self.jumped = False
       self.space_pressed = False
@@ -83,10 +74,9 @@ class Player():
 
     #get key inputs
      key = pygame.key.get_pressed()
-     if key [pygame.K_SPACE] and self.jumped == False:
+     if key[pygame.K_SPACE] and not self.jumped:
         self.velocity_y = -20
         self.jumped = True
-        self.space_pressed = True
      if not key[pygame.K_SPACE]:
         self.space_pressed = False
      if key[pygame.K_SPACE]:
@@ -98,9 +88,6 @@ class Player():
         delta_x = 10
         self.flip = False
 
-
-       
-     
      #adding gravity
      self.velocity_y +=1 
      if self.velocity_y > 10:
@@ -111,7 +98,7 @@ class Player():
 
 #check for collision
      for tile in level.tile_list:
-        #checing for collision in x axis
+        #checking for collision in x axis
         if tile[1].colliderect(self.rect.x + delta_x, self.rect.y, self.width, self.height):
             delta_x = 0
         #checking for collision in y axis
@@ -124,6 +111,11 @@ class Player():
            elif self.velocity_y >= 0:
               delta_y = tile[1].top - self.rect.bottom
               self.velocity_y = 0
+              self.on_ground = True
+
+              if self.on_ground:
+                 self.jumped = False
+
         #checking for collision with hazards
         if pygame.sprite.spritecollide(self, hazards, False):
            self.rect.x = 60
@@ -144,6 +136,7 @@ class Player():
     #checking for if player goes off screen in above
      if self.rect.top + delta_y <= 0:
         delta_y = 0
+        self.velocity_y = 0
 
      
 
@@ -154,7 +147,7 @@ class Player():
        
    def draw(self):
       screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 30, self.rect.y - 18))
-      pygame.draw.rect(screen, white, self.rect, 2)
+      #pygame.draw.rect(screen, white, self.rect, 2)
       
 
 character = Player(100, 500)
@@ -189,6 +182,9 @@ exit_button = Button (1200, 400, exit)
 level1_button = Button (1300, 150, level1_img)
 level2_button = Button (1300, 350, level2_img)
 level3_button = Button (1300, 550, level3_img)
+next_button = Button (1500, 10, next_level)
+back_button = Button (1300, 10, back_level)
+home_button = Button (1400, 10, home)
 
 def grid():
    # horizontal lines (13 tiles)
@@ -231,15 +227,10 @@ class Load_World():
                  tile = (image, image_rect)
                  self.tile_list.append(tile)
 
-
-
-
-
              if tile == 2:
                 hazard = Hazard(collumn_count * tile_size, row_count * tile_size)
                 hazards.add(hazard)
-            
-
+                
              collumn_count += 1
          row_count += 1   
 
@@ -256,7 +247,10 @@ class Hazard(pygame.sprite.Sprite):
      self.image = pygame.transform.scale(image, (tile_size, tile_size))
      self.rect = self.image.get_rect()
      self.rect.x = x
-     self.rect.y = y         
+     self.rect.y = y      
+
+
+
 
 level1_data =[
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
@@ -281,12 +275,12 @@ level2_data =[
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -294,15 +288,15 @@ level3_data =[
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 , 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
+[0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -346,59 +340,72 @@ while running:
         if level3_button.draw():
             level = Load_World(level3_data)
             menu_state = "level_3"
-    if menu_state == "level_1":    
-        character.draw()
-        character.movement()
+    if menu_state == "level_1":
         level.draw()
         hazards.draw(screen)
-        grid()
-        
+        character.movement()
+        character.draw()
+       #grid()
+
+        #deletes current level and hazards then loads next level data
+        if next_button.draw():
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
+         level = Load_World(level2_data)
+         menu_state = "level_2"
+        #deletes current level and hazards then loads to main screen
+        if home_button.draw():
+         menu_state = "home"
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
 
     if menu_state == "level_2":  
         character.draw()
         character.movement()
         level.draw()
         hazards.draw(screen)
-        grid()
+        #grid()
+        #deletes current level and hazards then loads next level data
+        if next_button.draw():
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
+         level = Load_World(level3_data)
+         menu_state = "level_3"
+        #deletes current level and hazards then loads previous level data
+        if back_button.draw():
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
+         level = Load_World(level1_data)
+         menu_state = "level_1"
+        #deletes current level and hazards then loads to main screen
+        if home_button.draw():
+         menu_state = "home"
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
 
     if menu_state == "level_3":  
         character.draw()
         character.movement()
         level.draw()
         hazards.draw(screen)
-        grid()
+        #deletes current level and hazards then loads to main screen
+        if home_button.draw():
+         menu_state = "home"
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
+         #deletes current level and hazards then loads previous level data
+        if back_button.draw():
+         del level
+         del hazards
+         hazards = pygame.sprite.Group()
+         level = Load_World(level2_data)
+         menu_state = "level_2"
 
-
-
-
-    
-      
-
-
-       
     pygame.display.flip()
 pygame.quit()
-
-
-
-
-
-
-
-
-
-
-
-
-
- #Animation updating
-     #current_time = pygame.time.get_ticks()
-     #if current_time - last_update >= animation:
-        #frame +=1
-        #if frame >= len(animation_list):
-          #frame = 0
-        #last_update = current_time
-
-      #show animate sprites
-     #screen.blit(animation_list[frame], (0, 0))
-     #Draw character
